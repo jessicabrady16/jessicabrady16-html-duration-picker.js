@@ -13,20 +13,23 @@ export default (function() {
   console.log("FORMATTED TIME CODE!! CURSER")
   // Gets the cursor selection
   const getCursorSelection = ({target: {selectionStart, value}}, hideSeconds) => {
-    const hourMarker = value.indexOf(':');
-    const minuteMarker = value.lastIndexOf(':');
+    const firstColonPosition = value.indexOf(':');
+    const secondColonPosition = value.lastIndexOf(':');
     let cursorSelection;
 
-    // The cursor selection is: hours
-    if (selectionStart <= hourMarker) {
+    if (hideHours && hideSeconds) {
+      return "minutes"
+    } else if (!hideHours && selectionStart <= firstColonPosition) {
       cursorSelection = 'hours';
-    } else if (hideSeconds || selectionStart <= minuteMarker) { // The cursor selection is: minutes
+    } else if (hideSeconds && !hideHours || selectionStart <= secondColonPosition) { // The cursor selection is: minutes
       cursorSelection = 'minutes';
-    } else if (!hideSeconds && selectionStart > minuteMarker) { // The cursor selection is: seconds
+    } else if (!hideSeconds && selectionStart > secondColonPosition) { // The cursor selection is: seconds
       cursorSelection = 'seconds';
+    } else {
+      console.warn("Unhandled case in getCursorSelection.")
     }
 
-    return {cursorSelection, hideSeconds, hourMarker, minuteMarker};
+    return {cursorSelection, hideSeconds, hourMarker: firstColonPosition, minuteMarker: secondColonPosition};
   };
   // Gets the time interval (hh or mm or ss) and selects the entire block
   const selectFocus = (event) => {
@@ -191,9 +194,12 @@ export default (function() {
 
   // Check data-duration for proper format
   const checkDuration = (duration, hideSeconds, hideHours) => {
+    console.log(`checkDuration hideHours:${hideHours} hideSeconds:${hideSeconds} duration:${duration}`)
     const pattern = getPattern(hideSeconds, hideHours)
     const regex = RegExp(pattern);
-    return regex.test(duration);
+    const isMatch = regex.test(duration)
+    console.log(`checkDuration isMatch:${isMatch} pattern:${pattern}`)
+    return isMatch
   };
 
   const getPattern = (hideSeconds,hideHours) => {
@@ -202,7 +208,7 @@ export default (function() {
     } else if (hideSeconds) {
       return '^[0-9]{2,3}:[0-5][0-9]$'
     } else if (hideHours) {
-      return '^[0-5][0-9]:[0-5][0-9]$'
+      return '^([0-9]{2,3}:)?[0-5][0-9]:[0-5][0-9]$'
     } else {
       return '^[0-9]{2,3}:[0-5][0-9]:[0-5][0-9]$'
     }
@@ -210,6 +216,7 @@ export default (function() {
 
   const matchConstraints = (picker, duration) => {
     const {maxDuration, minDuration} = getConstraints(picker);
+    console.log(`matchConstraints duration:${duration} minDuration:${minDuration} maxDuration:${maxDuration}`)
     return Math.min(Math.max(duration, minDuration), maxDuration);
   };
   const durationToSeconds = (inputBox, value) => {
@@ -217,11 +224,11 @@ export default (function() {
     const hideSeconds = shouldHideSeconds(inputBox)
     console.log(`durationToSeconds hideHours:${hideHours} hideSeconds:${hideSeconds} value:${value}`)
     const sectioned = value.split(':');
-    if (hideHours && hideSeconds) {
+    if (hideHours && hideSeconds && sectioned.length < 2) {
       return Number(sectioned[0] * 60)
-    } else if (hideHours) {
+    } else if (hideHours && sectioned.length < 3) {
       return Number(sectioned[1] || 0) + Number(sectioned[0] * 60)
-    } else if (hideSeconds) {
+    } else if (hideSeconds && sectioned.length < 3) {
       return Number(sectioned[1] * 60) + Number(sectioned[0] * 60 * 60)
     } else {
       return Number(sectioned[2] || 0) + Number(sectioned[1] * 60) + Number(sectioned[0] * 60 * 60);
@@ -336,6 +343,7 @@ export default (function() {
 
   const getInitialDuration = (picker) => {
     const duration = getDurationValue(picker, 'duration', 0);
+    console.log("getInitialDuration duration:" + duration)
     return matchConstraints(picker, duration);
   };
   const _init = () => {
