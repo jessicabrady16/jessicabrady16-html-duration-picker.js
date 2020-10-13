@@ -1,5 +1,5 @@
 {
-  "name": "html-duration-picker",
+  "name": "jessicabrady16-html-duration-picker",
   "version": "2.2.8",
   "description": "Turn an html input box to a duration picker, without jQuery",
   "main": "dist/html-duration-picker.min.js",
@@ -24,9 +24,11 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/nadchif/html-duration-picker.js.git"
+    "url": "https://github.com/jessicabrady16/jessicabrady16-html-duration-picker.js.git"
   },
-  "dependencies": {},
+  "dependencies": {
+    "jessicabrady16-html-duration-picker": "^2.2.8"
+  },
   "devDependencies": {
     "@babel/core": "^7.9.6",
     "babel-loader": "^8.1.0",
@@ -36,10 +38,10 @@
     "eslint": "^6.7.2",
     "eslint-config-google": "^0.14.0",
     "eslint-plugin-jasmine": "^4.1.0",
-    "live-server": "^1.2.1",
     "jasmine": "^3.5.0",
     "jasmine-core": "^3.5.0",
     "jsdom": "^15.2.1",
+    "live-server": "^1.2.1",
     "path": "^0.12.7",
     "webpack": "^4.43.0",
     "webpack-auto-inject-version": "^1.2.2",
