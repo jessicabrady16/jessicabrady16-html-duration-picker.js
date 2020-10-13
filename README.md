@@ -9,7 +9,7 @@ html-duration-picker.js
 [<img src="https://img.shields.io/badge/slack-ossenthusiasts-maroon.svg?logo=slack">](https://join.slack.com/t/ossenthusiasts/shared_invite/zt-eh9g0u7k-l2uUmCCBhUTHY8EWZFShIw)
 
 
-html-duration-picker.js is a very tiny JS library used for transforming a native HTML text input into a duration picker. The aim is for the picker to feel like a native element as much as possible.
+jessicabrady16-html-duration-picker.js is fork of html-duration-picker.js, which is a very tiny JS library used for transforming a native HTML text input into a duration picker. The aim is for the picker to feel like a native element as much as possible. This fork has a data-hide-hours as an attribute for the HTML tags.
 
 **BEFORE** ```<input type="text"> ```
 
@@ -22,7 +22,7 @@ html-duration-picker.js is a very tiny JS library used for transforming a native
 
 [See Live Demo](https://nadchif.github.io/html-duration-picker.js/)
 
-Why use html-duration-picker? 
+Why use html-duration-picker?
 
 * Tiny (~7kb)
 * No additional dependencies (CSS, jQuery, etc)

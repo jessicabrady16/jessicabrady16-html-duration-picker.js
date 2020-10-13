@@ -10,6 +10,7 @@
  */
 
 export default (function() {
+  console.log("FORMATTED TIME CODE!! CURSER")
   // Gets the cursor selection
   const getCursorSelection = ({target: {selectionStart, value}}, hideSeconds) => {
     const hourMarker = value.indexOf(':');
@@ -29,9 +30,10 @@ export default (function() {
   };
   // Gets the time interval (hh or mm or ss) and selects the entire block
   const selectFocus = (event) => {
+    const hideHours = shouldHideHours(event.target)
     const hideSeconds = shouldHideSeconds(event.target);
     // Gets the cursor position and select the nearest time interval
-    const {cursorSelection, hourMarker, minuteMarker} = getCursorSelection(event, hideSeconds);
+    const {cursorSelection, hourMarker, minuteMarker} = getCursorSelection(event, hideSeconds, hideHours);
 
     // Something is wrong with the duration format.
     if (!cursorSelection) {
@@ -66,6 +68,10 @@ export default (function() {
     return inputBox.dataset.hideSeconds !== undefined && inputBox.dataset.hideSeconds !== 'false';
   };
 
+  const shouldHideHours = (inputBox) => {
+    return inputBox.dataset.hideHours !== undefined && inputBox.dataset.hideHours !== 'false';
+  };
+
   const createEvent = (type, option = {bubbles: false, cancelable: false}) => {
     if (typeof(Event) === 'function') {
       return new Event(type);
@@ -77,19 +83,37 @@ export default (function() {
     }
   };
 
+  const formattedTime = (inputBox, hours, minutes, seconds) => {
+    const hideHours = shouldHideHours(inputBox)
+    const hideSeconds = shouldHideSeconds(inputBox)
+    console.log(`formattedTime hideHours:${hideHours} hideSeconds:${hideSeconds} hours:${hours} minutes:${minutes} seconds:${seconds}`)
+    if (hideSeconds && hideHours) {
+      const formattedMinutes = String(minutes).padStart(2, '0');
+      return formattedMinutes
+    } else if (hideSeconds) {
+      const formattedHours = String(hours).padStart(2, '0');
+      const formattedMinutes = String(minutes).padStart(2, '0');
+      return `${formattedHours}:${formattedMinutes}`
+    } else if (hideHours) {
+      const formattedMinutes = String(minutes).padStart(2, '0');
+      const formattedSeconds = String(seconds).padStart(2, '0');
+      return `${formattedMinutes}:${formattedSeconds}`
+    } else {
+      const formattedHours = String(hours).padStart(2, '0');
+      const formattedMinutes = String(minutes).padStart(2, '0');
+      const formattedSeconds = String(seconds).padStart(2, '0');
+      return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`
+    }
+  }
+
   // Inserts a formatted value into the input box
   const insertFormatted = (inputBox, secondsValue) => {
     const hours = Math.floor(secondsValue / 3600);
     secondsValue %= 3600;
     const minutes = Math.floor(secondsValue / 60);
     const seconds = secondsValue % 60;
-    const formattedHours = String(hours).padStart(2, '0');
-    const formattedMinutes = String(minutes).padStart(2, '0');
-    const formattedSeconds = String(seconds).padStart(2, '0');
 
-    const value = `${formattedHours}:${formattedMinutes}`;
-
-    inputBox.value = !shouldHideSeconds(inputBox) ? `${value}:${formattedSeconds}` : value;
+    inputBox.value = formattedTime(inputBox, hours, minutes, seconds)
 
     inputBox.dispatchEvent(createEvent('input'));
   };
@@ -97,11 +121,12 @@ export default (function() {
     const hourMarker = inputBox.value.indexOf(':');
     const minuteMarker = inputBox.value.lastIndexOf(':');
     const hideSeconds = shouldHideSeconds(inputBox);
+    const hideHours = shouldHideHours(inputBox);
 
     inputBox.focus();
     inputBox.select();
 
-    if (adjustmentFactor >= 60 * 60) {
+    if (!hideHours && adjustmentFactor >= 60 * 60) {
       inputBox.selectionStart = 0; // hours mode
       inputBox.selectionEnd = hourMarker;
     } else if (!hideSeconds && adjustmentFactor < 60) {
@@ -128,8 +153,11 @@ export default (function() {
 
   // Change the time value;
   const changeValue = (inputBox, direction) => {
+    console.log("changeValue direction:" + direction)
     const adjustmentFactor = getAdjustmentFactor(inputBox);
-    let secondsValue = durationToSeconds(inputBox.value);
+    console.log("changeValue adjustmentFactor:" + adjustmentFactor)
+    let secondsValue = durationToSeconds(inputBox, inputBox.value);
+    console.log("changeValue secondsValue:" + secondsValue)
     switch (direction) {
       case 'up':
         secondsValue += adjustmentFactor;
@@ -142,6 +170,7 @@ export default (function() {
         break;
     }
     const fixedValue = matchConstraints(inputBox, secondsValue);
+    console.log("changeValue fixedValue:" + fixedValue)
     insertFormatted(inputBox, fixedValue);
     // highlightIncrementArea(inputBox, adjustmentFactor);
   };
@@ -161,20 +190,39 @@ export default (function() {
   };
 
   // Check data-duration for proper format
-  const checkDuration = (duration, hideSeconds) => {
-    const pattern = hideSeconds ? '^[0-9]{2,3}:[0-5][0-9]$' : '^[0-9]{2,3}:[0-5][0-9]:[0-5][0-9]$';
+  const checkDuration = (duration, hideSeconds, hideHours) => {
+    const pattern = getPattern(hideSeconds, hideHours)
     const regex = RegExp(pattern);
     return regex.test(duration);
   };
+
+  const getPattern = (hideSeconds,hideHours) => {
+    if (hideHours && hideSeconds) {
+      return '^[0-5][0-9]$'
+    } else if (hideSeconds) {
+      return '^[0-9]{2,3}:[0-5][0-9]$'
+    } else if (hideHours) {
+      return '^[0-5][0-9]:[0-5][0-9]$'
+    } else {
+      return '^[0-9]{2,3}:[0-5][0-9]:[0-5][0-9]$'
+    }
+  }
 
   const matchConstraints = (picker, duration) => {
     const {maxDuration, minDuration} = getConstraints(picker);
     return Math.min(Math.max(duration, minDuration), maxDuration);
   };
-  const durationToSeconds = (value) => {
+  const durationToSeconds = (inputBox, value) => {
+    const hideHours = shouldHideHours(inputBox)
+    const hideSeconds = shouldHideSeconds(inputBox)
+    console.log(`durationToSeconds hideHours:${hideHours} hideSeconds:${hideSeconds} value:${value}`)
     const sectioned = value.split(':');
-    if (sectioned.length < 2) {
-      return 0;
+    if (hideHours && hideSeconds) {
+      return Number(sectioned[0] * 60)
+    } else if (hideHours) {
+      return Number(sectioned[1] || 0) + Number(sectioned[0] * 60)
+    } else if (hideSeconds) {
+      return Number(sectioned[1] * 60) + Number(sectioned[0] * 60 * 60)
     } else {
       return Number(sectioned[2] || 0) + Number(sectioned[1] * 60) + Number(sectioned[0] * 60 * 60);
     }
@@ -182,13 +230,14 @@ export default (function() {
 
   // validate any input in the box;
   const validateInput = (event) => {
+    const hideHours = shouldHideHours(event.target)
     const hideSeconds = shouldHideSeconds(event.target);
-    const {cursorSelection} = getCursorSelection(event, hideSeconds);
+    const {cursorSelection} = getCursorSelection(event, hideSeconds, hideHours);
     const sectioned = event.target.value.split(':');
 
     if (
       event.target.dataset.duration &&
-      checkDuration(event.target.dataset.duration, hideSeconds) &&
+      checkDuration(event.target.dataset.duration, hideSeconds, hideHours) &&
       ((hideSeconds && sectioned.length !== 2) ||
         (!hideSeconds && sectioned.length !== 3))
     ) {
@@ -229,7 +278,7 @@ export default (function() {
   const insertWithConstraints = (event) => {
     const picker = event.target;
     const duration = picker.value || picker.dataset.duration;
-    const secondsValue = durationToSeconds(duration);
+    const secondsValue = durationToSeconds(picker, duration);
     insertFormatted(picker, matchConstraints(picker, secondsValue));
   };
 
@@ -269,8 +318,8 @@ export default (function() {
 
   const getDurationValue = (picker, name, defaultValue) => {
     const value = picker.dataset[name];
-    if (checkDuration(value, shouldHideSeconds(picker))) {
-      return durationToSeconds(value);
+    if (checkDuration(value, shouldHideSeconds(picker), shouldHideHours(picker))) {
+      return durationToSeconds(picker, value);
     } else {
       return defaultValue;
     }
@@ -290,9 +339,11 @@ export default (function() {
     return matchConstraints(picker, duration);
   };
   const _init = () => {
+    console.log("FORMATTED TIME CODE!! _init")
     // Select all of the input fields with the attribute "html-duration-picker"
     const getInputFields = document.querySelectorAll('input.html-duration-picker');
     getInputFields.forEach((picker) => {
+      console.log("duration picker field:", picker)
       // Set the default text and apply some basic styling to the duration picker
       if (picker.getAttribute('data-upgraded') == 'true') {
         return; // in case some developer calls this or includes it twice
@@ -302,7 +353,7 @@ export default (function() {
       const pickerLeftMargin = currentPickerStyle.marginLeft;
       const totalPickerWidth = currentPickerStyle.width;
       picker.setAttribute('data-upgraded', true);
-      if (!picker.value || !checkDuration(picker.value, shouldHideSeconds(picker))) {
+      if (!picker.value || !checkDuration(picker.value, shouldHideSeconds(picker), shouldHideHours(picker))) {
         insertFormatted(picker, getInitialDuration(picker));
       }
       picker.style.textAlign = 'right';

@@ -1,1 +1,1 @@
-declare module 'html-duration-picker'
+declare module 'jessicabrady16-html-duration-picker'
