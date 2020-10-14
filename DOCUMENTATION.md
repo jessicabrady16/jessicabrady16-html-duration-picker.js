@@ -7,7 +7,7 @@ Installation
 ### HTML/JS
 <details>
   <summary>Click to expand!</summary>
-  
+
 #### Installation
 
 
@@ -51,7 +51,7 @@ That's it! Let the magic happen!
 ### Angular
 <details>
   <summary>Click to expand!</summary>
-    
+
 #### Installation
 Install the package via npm
 ```
@@ -79,14 +79,14 @@ To update dynamically loaded input boxes, you execute
 ```
 HtmlDurationPicker.refresh();
 ```
-  
+
 That's it! Let the magic happen!
 </details>
 
 Options
 ------
 
-Set default value to 15 minutes 
+Set default value to 15 minutes
 ```
 <input type="text" class="html-duration-picker" data-duration="00:15:00">
 ```
@@ -96,13 +96,17 @@ Set maximum value to 35 minutes
 <input type="text" class="html-duration-picker" data-duration-max="00:35:00">
 ```
 
-Set minimum value to 5 minutes 
+Set minimum value to 5 minutes
 ```
 <input type="text" class="html-duration-picker" data-duration-min="00:05:00">
 ```
 
-Hide seconds 
+Hide seconds
 ```
 <input type="text" class="html-duration-picker" data-hide-seconds>
 ```
 
+Hide hours
+```
+<input type="text" class="html-duration-picker" data-hide-hours>
+```

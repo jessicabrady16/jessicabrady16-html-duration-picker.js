@@ -1,4 +1,4 @@
-html-duration-picker.js
+HTML Duration Picker: "data-hide-hours" Edition
 =========
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
 [![All Contributors](https://img.shields.io/badge/all_contributors-19-orange.svg?style=flat-square)](#contributors-)
@@ -8,19 +8,29 @@ html-duration-picker.js
 [![first-timers-only](https://img.shields.io/badge/first--timers--only-friendly-blue.svg?style=flat-square)](https://www.firsttimersonly.com/)
 [<img src="https://img.shields.io/badge/slack-ossenthusiasts-maroon.svg?logo=slack">](https://join.slack.com/t/ossenthusiasts/shared_invite/zt-eh9g0u7k-l2uUmCCBhUTHY8EWZFShIw)
 
+jessicabrady16-html-duration-picker.js is fork of html-duration-picker.js, which is a very tiny JS library used for transforming a native HTML text input into a duration picker. The aim is for the picker to feel like a native element as much as possible.
 
-jessicabrady16-html-duration-picker.js is fork of html-duration-picker.js, which is a very tiny JS library used for transforming a native HTML text input into a duration picker. The aim is for the picker to feel like a native element as much as possible. This fork has a data-hide-hours as an attribute for the HTML tags.
+This fork has a data-hide-hours feature as an attribute for the HTML tags in addition to the data-hide-seconds that already existed.
 
-**BEFORE** ```<input type="text"> ```
+Here is an example with the data-hide-hours attribute:
 
-![Default Input](https://i.imgur.com/paB6Biy.jpg)
+```html
+<input
+  data-hide-hours
+  type="text"
+  class="html-duration-picker"
+  data-duration-max="00:15:00"
+  data-duration-min="00:00:00"
+  data-duration="00:08:03"
+  aria-label="Time"
+/>
+```
 
-**AFTER** ```<input type="text" class="html-duration-picker">```
+![Picker Input With Data-Hide-Hours](./screenshots/data-hide-hours.jpg)
+
+Without the data-hide-hours attribute:
 
 ![Duration Picker Input](https://i.imgur.com/vewRUA6.jpg)
-
-
-[See Live Demo](https://nadchif.github.io/html-duration-picker.js/)
 
 Why use html-duration-picker?
 
@@ -36,10 +46,10 @@ Why use html-duration-picker?
 Apache-2.0
 
 ## Contributions
-Contributions and suggestions are very welcome and wanted. I try to respond to pull requests within 48 hours. For more information see [CONTRIBUTING.md](https://github.com/nadchif/html-duration-picker.js/blob/master/CONTRIBUTING.md).
+Contributions and suggestions are very welcome and wanted. I try to respond to pull requests within 48 hours. For more information see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## Documentation
-See [DOCUMENTATION.md](https://github.com/nadchif/html-duration-picker.js/blob/master/DOCUMENTATION.md) for instructions on how to install and use it in your project.
+See [DOCUMENTATION.md](./DOCUMENTATION.md) for instructions on how to install and use it in your project.
 
 
 ## Contributors ✨

@@ -10,9 +10,9 @@
  */
 
 export default (function() {
-  //console.log("FORMATTED TIME CODE!! CURSER")
-  // Gets the cursor selection
+
   const getCursorSelection = ({target: {selectionStart, value}}, hideSeconds, hideHours) => {
+    //console.log(`getCursorSelection selectionStart:${selectionStart} value:${value}`)
     const firstColonPosition = value.indexOf(':');
     const secondColonPosition = value.lastIndexOf(':');
     let cursorSelection;
@@ -21,7 +21,7 @@ export default (function() {
       return "minutes"
     } else if (!hideHours && selectionStart <= firstColonPosition) {
       cursorSelection = 'hours';
-    } else if (hideSeconds && !hideHours || selectionStart <= secondColonPosition) { // The cursor selection is: minutes
+    } else if (!hideSeconds && selectionStart <= secondColonPosition) { // The cursor selection is: minutes
       cursorSelection = 'minutes';
     } else if (!hideSeconds && selectionStart > secondColonPosition) { // The cursor selection is: seconds
       cursorSelection = 'seconds';
@@ -29,10 +29,11 @@ export default (function() {
       console.warn("Unhandled case in getCursorSelection.")
     }
 
-    return {cursorSelection, hideSeconds, hourMarker: firstColonPosition, minuteMarker: secondColonPosition};
+    return {cursorSelection, hideSeconds, hourMarker: hideHours ? null : firstColonPosition, minuteMarker: secondColonPosition};
   };
   // Gets the time interval (hh or mm or ss) and selects the entire block
   const selectFocus = (event) => {
+    console.log('selectFocus')
     const hideHours = shouldHideHours(event.target)
     const hideSeconds = shouldHideSeconds(event.target);
     // Gets the cursor position and select the nearest time interval
@@ -53,7 +54,7 @@ export default (function() {
       const increment = hideSeconds ? 3 : 0;
 
       event.target.setAttribute('data-adjustment-mode', 60);
-      event.target.setSelectionRange(hourMarker + 1, minuteMarker + increment);
+      event.target.setSelectionRange(hourMarker === null ? 0 : hourMarker + 1, minuteMarker + increment);
       return;
     }
     // The cursor selection is: seconds
@@ -87,10 +88,20 @@ export default (function() {
     }
   };
 
-  const formattedTime = (inputBox, hours, minutes, seconds) => {
+  const formatTimeFromSeconds = (inputBox, totalSeconds) => {
+
+    const hours = Math.floor(totalSeconds / 3600)
+    const secondsWithoutHours = totalSeconds % 3600
+    const minutes = Math.floor(secondsWithoutHours / 60)
+    const seconds = secondsWithoutHours % 60
+
+    return formatTime(inputBox, hours, minutes, seconds)
+  }
+
+  const formatTime = (inputBox, hours, minutes, seconds) => {
     const hideHours = shouldHideHours(inputBox)
     const hideSeconds = shouldHideSeconds(inputBox)
-    //console.log(`formattedTime hideHours:${hideHours} hideSeconds:${hideSeconds} hours:${hours} minutes:${minutes} seconds:${seconds}`)
+    //console.log(`formatTime hideHours:${hideHours} hideSeconds:${hideSeconds} hours:${hours} minutes:${minutes} seconds:${seconds}`)
     if (hideSeconds && hideHours) {
       const formattedMinutes = String(minutes).padStart(2, '0');
       return formattedMinutes
@@ -111,18 +122,10 @@ export default (function() {
   }
 
   // Inserts a formatted value into the input box
-  const insertFormatted = (inputBox, secondsValue) => {
-    //console.warn('insertFormatted ' + secondsValue)
-    const hours = Math.floor(secondsValue / 3600);
-    secondsValue %= 3600;
-    const minutes = Math.floor(secondsValue / 60);
-    const seconds = secondsValue % 60;
-
-    inputBox.value = formattedTime(inputBox, hours, minutes, seconds)
-
-    //console.warn('insertFormatted dispatching input event' + secondsValue)
-    inputBox.dispatchEvent(createEvent('input', {bubbles: true, cancelable: false}));
-  };
+  const insertFormatted = (inputBox, totalSeconds) => {
+    inputBox.value = formatTimeFromSeconds(inputBox, totalSeconds)
+    inputBox.dispatchEvent(createEvent('input', {bubbles: true, cancelable: false}))
+  }
 
   const highlightIncrementArea = (inputBox, adjustmentFactor) => {
     const hourMarker = inputBox.value.indexOf(':');
@@ -184,6 +187,7 @@ export default (function() {
 
   // shift focus from one unit to another;
   const shiftFocus = (inputBox, toSide) => {
+    console.log('shiftFocus')
     const adjustmentFactor = getAdjustmentFactor(inputBox);
 
     switch (toSide) {
@@ -241,6 +245,7 @@ export default (function() {
 
   // validate any input in the box;
   const validateInput = (event) => {
+    console.log('validateInput')
     const hideHours = shouldHideHours(event.target)
     const hideSeconds = shouldHideSeconds(event.target);
     const {cursorSelection} = getCursorSelection(event, hideSeconds, hideHours);
@@ -252,13 +257,17 @@ export default (function() {
       ((hideSeconds && sectioned.length !== 2) ||
         (!hideSeconds && sectioned.length !== 3))
     ) {
-      event.target.value = event.target.dataset.duration; // fallback to data-duration value
-      return;
+      console.log('fallback to data-duration value')
+      event.target.value = formatTimeFromSeconds(event.target, durationToSeconds(event.target, event.target.dataset.duration))
+      selectFocus(event)
+      return
     }
     if (!hideSeconds && sectioned.length !== 3) {
-      event.target.value = '00:00:00'; // fallback to default
+      console.log('fallback to default 00:00:00')
+      event.target.value = '00:00:00';
       return;
     } else if (hideSeconds && sectioned.length !== 2) {
+      console.log('fallback to default 00:00')
       event.target.value = '00:00'; // fallback to default
       return;
     }
@@ -283,7 +292,8 @@ export default (function() {
       }
     }
 
-    event.target.value = sectioned.join(':');
+    event.target.value = sectioned.join(':')
+    selectFocus(event)
   };
 
   const insertWithConstraints = (event) => {
