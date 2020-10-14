@@ -9,7 +9,7 @@
     "buildfast": "./node_modules/.bin/webpack --mode=development --progress --colors",
     "buildpatch": "npm version patch && ./node_modules/.bin/eslint src/html-duration-picker.js && webpack --mode=production --progress --colors",
     "dev": "./node_modules/.bin/live-server ./src/ -o",
-    "test": "./node_modules/.bin/eslint src/html-duration-picker.js && npm run-script buildfast && ./node_modules/.bin/jasmine",
+    "test": "npx eslint src/html-duration-picker.js && npm run-script buildfast && ./node_modules/.bin/jasmine",
     "test-eslint": "./node_modules/.bin/eslint src/html-duration-picker.js",
     "test-jasmine": "./node_modules/.bin/jasmine",
     "deploy": "npm run-script build && npm publish"
