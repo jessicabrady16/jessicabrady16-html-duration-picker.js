@@ -9,35 +9,47 @@
  *
  */
 
-export default (function() {
-
-  const getCursorSelection = ({target: {selectionStart, value}}, hideSeconds, hideHours) => {
-    //console.log(`getCursorSelection selectionStart:${selectionStart} value:${value}`)
+export default (function () {
+  const getCursorSelection = (
+    {target: {selectionStart, value}},
+    hideSeconds,
+    hideHours,
+  ) => {
     const firstColonPosition = value.indexOf(':');
     const secondColonPosition = value.lastIndexOf(':');
     let cursorSelection;
 
     if (hideHours && hideSeconds) {
-      return "minutes"
+      return 'minutes';
     } else if (!hideHours && selectionStart <= firstColonPosition) {
       cursorSelection = 'hours';
-    } else if (!hideSeconds && selectionStart <= secondColonPosition) { // The cursor selection is: minutes
+    } else if (!hideSeconds && selectionStart <= secondColonPosition) {
+      // The cursor selection is: minutes
       cursorSelection = 'minutes';
-    } else if (!hideSeconds && selectionStart > secondColonPosition) { // The cursor selection is: seconds
+    } else if (!hideSeconds && selectionStart > secondColonPosition) {
+      // The cursor selection is: seconds
       cursorSelection = 'seconds';
     } else {
-      console.warn("Unhandled case in getCursorSelection.")
+      console.warn('Unhandled case in getCursorSelection.');
     }
 
-    return {cursorSelection, hideSeconds, hourMarker: hideHours ? null : firstColonPosition, minuteMarker: secondColonPosition};
+    return {
+      cursorSelection,
+      hideSeconds,
+      hourMarker: hideHours ? null : firstColonPosition,
+      minuteMarker: secondColonPosition,
+    };
   };
   // Gets the time interval (hh or mm or ss) and selects the entire block
   const selectFocus = (event) => {
-    console.log('selectFocus')
-    const hideHours = shouldHideHours(event.target)
+    const hideHours = shouldHideHours(event.target);
     const hideSeconds = shouldHideSeconds(event.target);
     // Gets the cursor position and select the nearest time interval
-    const {cursorSelection, hourMarker, minuteMarker} = getCursorSelection(event, hideSeconds, hideHours);
+    const {cursorSelection, hourMarker, minuteMarker} = getCursorSelection(
+      event,
+      hideSeconds,
+      hideHours,
+    );
 
     // Something is wrong with the duration format.
     if (!cursorSelection) {
@@ -54,7 +66,10 @@ export default (function() {
       const increment = hideSeconds ? 3 : 0;
 
       event.target.setAttribute('data-adjustment-mode', 60);
-      event.target.setSelectionRange(hourMarker === null ? 0 : hourMarker + 1, minuteMarker + increment);
+      event.target.setSelectionRange(
+        hourMarker === null ? 0 : hourMarker + 1,
+        minuteMarker + increment,
+      );
       return;
     }
     // The cursor selection is: seconds
@@ -69,19 +84,26 @@ export default (function() {
   };
 
   const shouldHideSeconds = (inputBox) => {
-    return inputBox.dataset.hideSeconds !== undefined && inputBox.dataset.hideSeconds !== 'false';
+    return (
+      inputBox.dataset.hideSeconds !== undefined &&
+      inputBox.dataset.hideSeconds !== 'false'
+    );
   };
 
   const shouldHideHours = (inputBox) => {
-    return inputBox.dataset.hideHours !== undefined && inputBox.dataset.hideHours !== 'false';
+    return (
+      inputBox.dataset.hideHours !== undefined &&
+      inputBox.dataset.hideHours !== 'false'
+    );
   };
 
   const createEvent = (type, option = {bubbles: false, cancelable: false}) => {
-    if (typeof(Event) === 'function') {
-      //console.log('createEvent event is a function')
-      return new Event(type, {bubbles: option.bubbles, cancelable: option.cancelable});
+    if (typeof Event === 'function') {
+      return new Event(type, {
+        bubbles: option.bubbles,
+        cancelable: option.cancelable,
+      });
     } else {
-      //console.log('createEvent event is not a function')
       const event = document.createEvent('Event');
       event.initEvent(type, option.bubbles, option.cancelable);
       return event;
@@ -89,43 +111,43 @@ export default (function() {
   };
 
   const formatTimeFromSeconds = (inputBox, totalSeconds) => {
+    const hours = Math.floor(totalSeconds / 3600);
+    const secondsWithoutHours = totalSeconds % 3600;
+    const minutes = Math.floor(secondsWithoutHours / 60);
+    const seconds = secondsWithoutHours % 60;
 
-    const hours = Math.floor(totalSeconds / 3600)
-    const secondsWithoutHours = totalSeconds % 3600
-    const minutes = Math.floor(secondsWithoutHours / 60)
-    const seconds = secondsWithoutHours % 60
-
-    return formatTime(inputBox, hours, minutes, seconds)
-  }
+    return formatTime(inputBox, hours, minutes, seconds);
+  };
 
   const formatTime = (inputBox, hours, minutes, seconds) => {
-    const hideHours = shouldHideHours(inputBox)
-    const hideSeconds = shouldHideSeconds(inputBox)
-    //console.log(`formatTime hideHours:${hideHours} hideSeconds:${hideSeconds} hours:${hours} minutes:${minutes} seconds:${seconds}`)
+    const hideHours = shouldHideHours(inputBox);
+    const hideSeconds = shouldHideSeconds(inputBox);
     if (hideSeconds && hideHours) {
       const formattedMinutes = String(minutes).padStart(2, '0');
-      return formattedMinutes
+      return formattedMinutes;
     } else if (hideSeconds) {
       const formattedHours = String(hours).padStart(2, '0');
       const formattedMinutes = String(minutes).padStart(2, '0');
-      return `${formattedHours}:${formattedMinutes}`
+      return `${formattedHours}:${formattedMinutes}`;
     } else if (hideHours) {
       const formattedMinutes = String(minutes).padStart(2, '0');
       const formattedSeconds = String(seconds).padStart(2, '0');
-      return `${formattedMinutes}:${formattedSeconds}`
+      return `${formattedMinutes}:${formattedSeconds}`;
     } else {
       const formattedHours = String(hours).padStart(2, '0');
       const formattedMinutes = String(minutes).padStart(2, '0');
       const formattedSeconds = String(seconds).padStart(2, '0');
-      return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`
+      return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
     }
-  }
+  };
 
   // Inserts a formatted value into the input box
   const insertFormatted = (inputBox, totalSeconds) => {
-    inputBox.value = formatTimeFromSeconds(inputBox, totalSeconds)
-    inputBox.dispatchEvent(createEvent('input', {bubbles: true, cancelable: false}))
-  }
+    inputBox.value = formatTimeFromSeconds(inputBox, totalSeconds);
+    inputBox.dispatchEvent(
+      createEvent('input', {bubbles: true, cancelable: false}),
+    );
+  };
 
   const highlightIncrementArea = (inputBox, adjustmentFactor) => {
     const hourMarker = inputBox.value.indexOf(':');
@@ -163,11 +185,8 @@ export default (function() {
 
   // Change the time value;
   const changeValue = (inputBox, direction) => {
-    //console.log("changeValue direction:" + direction)
     const adjustmentFactor = getAdjustmentFactor(inputBox);
-    //console.log("changeValue adjustmentFactor:" + adjustmentFactor)
     let secondsValue = durationToSeconds(inputBox, inputBox.value);
-    //console.log("changeValue secondsValue:" + secondsValue)
     switch (direction) {
       case 'up':
         secondsValue += adjustmentFactor;
@@ -180,14 +199,12 @@ export default (function() {
         break;
     }
     const fixedValue = matchConstraints(inputBox, secondsValue);
-    //console.log("changeValue fixedValue:" + fixedValue)
     insertFormatted(inputBox, fixedValue);
     // highlightIncrementArea(inputBox, adjustmentFactor);
   };
 
   // shift focus from one unit to another;
   const shiftFocus = (inputBox, toSide) => {
-    console.log('shiftFocus')
     const adjustmentFactor = getAdjustmentFactor(inputBox);
 
     switch (toSide) {
@@ -202,51 +219,50 @@ export default (function() {
 
   // Check data-duration for proper format
   const checkDuration = (duration, hideSeconds, hideHours) => {
-    //console.log(`checkDuration hideHours:${hideHours} hideSeconds:${hideSeconds} duration:${duration}`)
-    const pattern = getPattern(hideSeconds, hideHours)
+    const pattern = getPattern(hideSeconds, hideHours);
     const regex = RegExp(pattern);
-    const isMatch = regex.test(duration)
-    //console.log(`checkDuration isMatch:${isMatch} pattern:${pattern}`)
-    return isMatch
+    const isMatch = regex.test(duration);
+    return isMatch;
   };
 
   const getPattern = (hideSeconds, hideHours) => {
     if (hideHours && hideSeconds) {
-      return '^[0-5][0-9]$'
+      return '^[0-5][0-9]$';
     } else if (hideSeconds) {
-      return '^[0-9]{2,3}:[0-5][0-9]$'
+      return '^[0-9]{2,3}:[0-5][0-9]$';
     } else if (hideHours) {
-      return '^([0-9]{2,3}:)?[0-5][0-9]:[0-5][0-9]$'
+      return '^([0-9]{2,3}:)?[0-5][0-9]:[0-5][0-9]$';
     } else {
-      return '^[0-9]{2,3}:[0-5][0-9]:[0-5][0-9]$'
+      return '^[0-9]{2,3}:[0-5][0-9]:[0-5][0-9]$';
     }
-  }
+  };
 
   const matchConstraints = (picker, duration) => {
     const {maxDuration, minDuration} = getConstraints(picker);
-    //console.log(`matchConstraints duration:${duration} minDuration:${minDuration} maxDuration:${maxDuration}`)
     return Math.min(Math.max(duration, minDuration), maxDuration);
   };
   const durationToSeconds = (inputBox, value) => {
-    const hideHours = shouldHideHours(inputBox)
-    const hideSeconds = shouldHideSeconds(inputBox)
-    //console.log(`durationToSeconds hideHours:${hideHours} hideSeconds:${hideSeconds} value:${value}`)
+    const hideHours = shouldHideHours(inputBox);
+    const hideSeconds = shouldHideSeconds(inputBox);
     const sectioned = value.split(':');
     if (hideHours && hideSeconds && sectioned.length < 2) {
-      return Number(sectioned[0] * 60)
+      return Number(sectioned[0] * 60);
     } else if (hideHours && sectioned.length < 3) {
-      return Number(sectioned[1] || 0) + Number(sectioned[0] * 60)
+      return Number(sectioned[1] || 0) + Number(sectioned[0] * 60);
     } else if (hideSeconds && sectioned.length < 3) {
-      return Number(sectioned[1] * 60) + Number(sectioned[0] * 60 * 60)
+      return Number(sectioned[1] * 60) + Number(sectioned[0] * 60 * 60);
     } else {
-      return Number(sectioned[2] || 0) + Number(sectioned[1] * 60) + Number(sectioned[0] * 60 * 60);
+      return (
+        Number(sectioned[2] || 0) +
+        Number(sectioned[1] * 60) +
+        Number(sectioned[0] * 60 * 60)
+      );
     }
   };
 
   // validate any input in the box;
   const validateInput = (event) => {
-    console.log('validateInput')
-    const hideHours = shouldHideHours(event.target)
+    const hideHours = shouldHideHours(event.target);
     const hideSeconds = shouldHideSeconds(event.target);
     const {cursorSelection} = getCursorSelection(event, hideSeconds, hideHours);
     const sectioned = event.target.value.split(':');
@@ -257,17 +273,17 @@ export default (function() {
       ((hideSeconds && sectioned.length !== 2) ||
         (!hideSeconds && sectioned.length !== 3))
     ) {
-      console.log('fallback to data-duration value')
-      event.target.value = formatTimeFromSeconds(event.target, durationToSeconds(event.target, event.target.dataset.duration))
-      selectFocus(event)
-      return
+      event.target.value = formatTimeFromSeconds(
+        event.target,
+        durationToSeconds(event.target, event.target.dataset.duration),
+      );
+      selectFocus(event);
+      return;
     }
     if (!hideSeconds && sectioned.length !== 3) {
-      console.log('fallback to default 00:00:00')
       event.target.value = '00:00:00';
       return;
     } else if (hideSeconds && sectioned.length !== 2) {
-      console.log('fallback to default 00:00')
       event.target.value = '00:00'; // fallback to default
       return;
     }
@@ -280,7 +296,12 @@ export default (function() {
     if (sectioned[1] > 59 || sectioned[1].length > 2) {
       sectioned[1] = '59';
     }
-    if (!hideSeconds && sectioned[1].length === 2 && sectioned[1].slice(-1) === event.key && cursorSelection === 'minutes') {
+    if (
+      !hideSeconds &&
+      sectioned[1].length === 2 &&
+      sectioned[1].slice(-1) === event.key &&
+      cursorSelection === 'minutes'
+    ) {
       shiftFocus(event.target, 'right');
     }
     if (!hideSeconds) {
@@ -292,8 +313,8 @@ export default (function() {
       }
     }
 
-    event.target.value = sectioned.join(':')
-    selectFocus(event)
+    event.target.value = sectioned.join(':');
+    selectFocus(event);
   };
 
   const insertWithConstraints = (event) => {
@@ -304,7 +325,13 @@ export default (function() {
   };
 
   const handleKeydown = (event) => {
-    const changeValueKeys = ['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'Enter'];
+    const changeValueKeys = [
+      'ArrowDown',
+      'ArrowUp',
+      'ArrowLeft',
+      'ArrowRight',
+      'Enter',
+    ];
     if (changeValueKeys.includes(event.key)) {
       switch (event.key) {
         // use up and down arrow keys to increase value;
@@ -314,7 +341,7 @@ export default (function() {
         case 'ArrowUp':
           changeValue(event.target, 'up');
           break;
-          // use left and right arrow keys to shift focus;
+        // use left and right arrow keys to shift focus;
         case 'ArrowLeft':
           shiftFocus(event.target, 'left');
           break;
@@ -339,7 +366,9 @@ export default (function() {
 
   const getDurationValue = (picker, name, defaultValue) => {
     const value = picker.dataset[name];
-    if (checkDuration(value, shouldHideSeconds(picker), shouldHideHours(picker))) {
+    if (
+      checkDuration(value, shouldHideSeconds(picker), shouldHideHours(picker))
+    ) {
       return durationToSeconds(picker, value);
     } else {
       return defaultValue;
@@ -357,25 +386,32 @@ export default (function() {
 
   const getInitialDuration = (picker) => {
     const duration = getDurationValue(picker, 'duration', 0);
-    //console.log("getInitialDuration duration:" + duration)
     return matchConstraints(picker, duration);
   };
   const _init = () => {
-    //console.log("FORMATTED TIME CODE!! _init")
     // Select all of the input fields with the attribute "html-duration-picker"
-    const getInputFields = document.querySelectorAll('input.html-duration-picker');
+    const getInputFields = document.querySelectorAll(
+      'input.html-duration-picker',
+    );
     getInputFields.forEach((picker) => {
-      //console.log("duration picker field:", picker)
       // Set the default text and apply some basic styling to the duration picker
       if (picker.getAttribute('data-upgraded') == 'true') {
         return; // in case some developer calls this or includes it twice
       }
-      const currentPickerStyle = picker.currentStyle || window.getComputedStyle(picker);
+      const currentPickerStyle =
+        picker.currentStyle || window.getComputedStyle(picker);
       const pickerRightMargin = currentPickerStyle.marginRight;
       const pickerLeftMargin = currentPickerStyle.marginLeft;
       const totalPickerWidth = currentPickerStyle.width;
       picker.setAttribute('data-upgraded', true);
-      if (!picker.value || !checkDuration(picker.value, shouldHideSeconds(picker), shouldHideHours(picker))) {
+      if (
+        !picker.value ||
+        !checkDuration(
+          picker.value,
+          shouldHideSeconds(picker),
+          shouldHideHours(picker),
+        )
+      ) {
         insertFormatted(picker, getInitialDuration(picker));
       }
       picker.style.textAlign = 'right';
@@ -400,22 +436,40 @@ export default (function() {
 
       scrollUpBtn.setAttribute('type', 'button');
       scrollUpBtn.setAttribute('aria-label', 'Increase duration');
-      scrollUpBtn.setAttribute('style', `text-align:center; width: 16px;padding: 0px 4px; border:none; cursor:default;
-        height:${(picker.offsetHeight/2)-1}px !important; position:absolute; top: 1px;`);
+      scrollUpBtn.setAttribute(
+        'style',
+        `text-align:center; width: 16px;padding: 0px 4px; border:none; cursor:default;
+        height:${
+          picker.offsetHeight / 2 - 1
+        }px !important; position:absolute; top: 1px;`,
+      );
       scrollUpBtn.classList.add('scroll-up');
       scrollDownBtn.setAttribute('type', 'button');
       scrollDownBtn.setAttribute('aria-label', 'Decrease duration');
-      scrollDownBtn.setAttribute('style', `text-align:center; width: 16px;padding: 0px 4px; border:none; cursor:default;
-        height:${(picker.offsetHeight/2)-1}px !important; position:absolute; top: ${(picker.offsetHeight/2)-1}px;`);
+      scrollDownBtn.setAttribute(
+        'style',
+        `text-align:center; width: 16px;padding: 0px 4px; border:none; cursor:default;
+        height:${
+          picker.offsetHeight / 2 - 1
+        }px !important; position:absolute; top: ${
+          picker.offsetHeight / 2 - 1
+        }px;`,
+      );
       scrollDownBtn.classList.add('scroll-down');
 
       // Create the carets in the buttons. These can be replaced by images, font icons, or text.
       const caretUp = document.createElement('div');
       const caretDown = document.createElement('div');
-      caretUp.setAttribute('style', `width:0;height:0;
-        border-style:solid;border-width:0 4px 5px 4px; border-color:transparent transparent #000 transparent`);
-      caretDown.setAttribute('style', `width:0;height:0;
-        border-style:solid;border-width:5px 4px 0 4px; border-color:#000 transparent transparent transparent`);
+      caretUp.setAttribute(
+        'style',
+        `width:0;height:0;
+        border-style:solid;border-width:0 4px 5px 4px; border-color:transparent transparent #000 transparent`,
+      );
+      caretDown.setAttribute(
+        'style',
+        `width:0;height:0;
+        border-style:solid;border-width:5px 4px 0 4px; border-color:#000 transparent transparent transparent`,
+      );
       // Insert the carets into the up and down buttons
       scrollDownBtn.appendChild(caretDown);
       scrollUpBtn.appendChild(caretUp);
@@ -470,8 +524,13 @@ export default (function() {
 
       // this div houses the increase/decrease buttons
       const controlsDiv = document.createElement('div');
-      controlsDiv.setAttribute('style', `display:inline-block; position: absolute;top:1px;left: ${parseFloat(totalPickerWidth) - 20}px;
-        height:${picker.offsetHeight}px; padding:2px 0`);
+      controlsDiv.setAttribute(
+        'style',
+        `display:inline-block; position: absolute;top:1px;left: ${
+          parseFloat(totalPickerWidth) - 20
+        }px;
+        height:${picker.offsetHeight}px; padding:2px 0`,
+      );
       controlsDiv.classList.add('controls');
 
       // Add buttons to controls div
@@ -480,8 +539,11 @@ export default (function() {
 
       // this div wraps around existing input, then appends control div
       const controlWrapper = document.createElement('div');
-      controlWrapper.setAttribute('style', `display: inline-block; position: relative; background: transparent;
-        padding: 0px; width: ${totalPickerWidth}; margin-left: ${pickerLeftMargin}; margin-right: ${pickerRightMargin};`);
+      controlWrapper.setAttribute(
+        'style',
+        `display: inline-block; position: relative; background: transparent;
+        padding: 0px; width: ${totalPickerWidth}; margin-left: ${pickerLeftMargin}; margin-right: ${pickerRightMargin};`,
+      );
       controlWrapper.classList.add('html-duration-picker-wrapper');
 
       picker.parentNode.insertBefore(controlWrapper, picker);
